@@ -54,4 +54,25 @@ app.get("/api/projects", (req, res) => {
 
   res.status(200).json({ data: projects });
 });
+
+app.get("/api/projects/:id", (req, res) => {
+  console.log("Incoming request:", req.method, req.path);
+
+  const id = req.params.id;
+
+  const project = projects.find((item) => item.id === id);
+
+  if (project === undefined) {
+    res.status(404).json({
+      message: "پروژه پیدا نشد.",
+    });
+    return;
+  }
+
+  res.status(200).json({
+    message: "پروژه پیدا شد.",
+    data: project,
+  });
+});
+
 export default app;
