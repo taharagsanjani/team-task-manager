@@ -75,4 +75,34 @@ app.get("/api/projects/:id", (req, res) => {
   });
 });
 
+app.put("/api/projects/:id", (req, res) => {
+  console.log("Incoming request:", req.method, req.path);
+
+  const result = validateProject(req.body);
+  const id = req.params.id;
+  const project = projects.find((item) => item.id === id);
+
+  if (project === undefined) {
+    res.status(404).json({
+      message: "پروژه پیدا نشد.",
+    });
+    return;
+  }
+
+  if (result.success === false) {
+    res.status(400).json({
+      message: result.error,
+    });
+    return;
+  }
+
+  project.name = result.data.name;
+  project.description = result.data.description;
+
+  res.status(200).json({
+    message: "پروژه ادیت شد.",
+    data: project,
+  });
+});
+
 export default app;
