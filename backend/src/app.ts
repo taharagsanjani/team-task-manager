@@ -105,4 +105,24 @@ app.put("/api/projects/:id", (req, res) => {
   });
 });
 
+app.delete("/api/projects/:id", (req, res) => {
+  console.log("Incoming request:", req.method, req.path);
+
+  const id = req.params.id;
+  const projectIndex = projects.findIndex((item) => item.id === id);
+
+  if (projectIndex === -1) {
+    res.status(404).json({
+      message: "پروژه پیدا نشد.",
+    });
+    return;
+  }
+
+  projects.splice(projectIndex,1)
+
+  res.status(200).json({
+    message: "پروژه حذف شد.",
+  });
+});
+
 export default app;
