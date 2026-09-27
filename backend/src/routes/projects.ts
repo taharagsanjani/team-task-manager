@@ -1,16 +1,15 @@
 import { Router } from "express";
 import { projects } from "../data/projects.js";
 import { validateProject } from "../validators/project.js";
-import { randomUUID } from "node:crypto";
-
+import { ProjectModel } from "../models/project.model.js";
 
 const router = Router();
 
-
-router.get("/", (req, res) => {
+router.get("/", async (req, res) => {
   console.log("Incoming request:", req.method, req.path);
 
-  res.status(200).json({ data: projects });
+  const project = await ProjectModel.find();
+  res.status(200).json({ data: project });
 });
 
 router.get("/:id", (req, res) => {
@@ -33,31 +32,37 @@ router.get("/:id", (req, res) => {
   });
 });
 
-// ido : its for ///creating a project sing post 
+// ido : its for ///creating a project sing post
 
-router.post("/", (req, res) => {
+router.post("/", async (req, res) => {
   console.log("Incoming request:", req.method, req.path);
   console.log("body:", req.body);
-  const result = validateProject(req.body);
 
-  if (result.success === false) {
-    res.status(400).json({
-      message: result.error,
+  try {
+    const result = validateProject(req.body);
+
+    if (result.success === false) {
+      res.status(400).json({
+        message: result.error,
+      });
+      return;
+    }
+    const newProject = {
+      name: result.data.name,
+      description: result.data.description,
+    };
+
+    const projectNew = await ProjectModel.create(newProject);
+    res.status(201).json({
+      message: "پروژه ساخته شد.",
+      data: projectNew,
     });
-    return;
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      message: "ذخیره پروژه انجام نشد",
+    });
   }
-  const newProject = {
-    id: randomUUID(),
-    name: result.data.name,
-    description: result.data.description,
-  };
-
-  projects.push(newProject);
-
-  res.status(201).json({
-    message: "اطلاعات پروژه معتبر است.",
-    data: result.data,
-  });
 });
 
 // ido : its for ///edit the project
@@ -92,7 +97,7 @@ router.put("/:id", (req, res) => {
   });
 });
 
-// ido : its for ///remove the project 
+// ido : its for ///remove the project
 
 router.delete("/:id", (req, res) => {
   console.log("Incoming request:", req.method, req.path);
@@ -114,4 +119,4 @@ router.delete("/:id", (req, res) => {
   });
 });
 
-export default router
+export default router;
