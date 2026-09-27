@@ -1,35 +1,53 @@
 import { Router } from "express";
-import { projects } from "../data/projects.js";
 import { validateProject } from "../validators/project.js";
 import { ProjectModel } from "../models/project.model.js";
+import mongoose from "mongoose";
 
 const router = Router();
 
 router.get("/", async (req, res) => {
-  console.log("Incoming request:", req.method, req.path);
+  try {
+    const projects = await ProjectModel.find();
 
-  const project = await ProjectModel.find();
-  res.status(200).json({ data: project });
+    res.status(200).json({ data: projects });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "خواندن پروژه‌ها انجام نشد.",
+    });
+  }
 });
 
-router.get("/:id", (req, res) => {
-  console.log("Incoming request:", req.method, req.path);
+router.get("/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
 
-  const id = req.params.id;
+    if (!mongoose.isObjectIdOrHexString(id)) {
+      res.status(400).json({
+        message: "شناسه پروژه نامعتبر است.",
+      });
+      return;
+    }
 
-  const project = projects.find((item) => item.id === id);
+    const project = await ProjectModel.findById(id);
 
-  if (project === undefined) {
-    res.status(404).json({
-      message: "پروژه پیدا نشد.",
+    if (project === null) {
+      res.status(404).json({
+        message: "پروژه پیدا نشد.",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      message: "پروژه پیدا شد.",
+      data: project,
     });
-    return;
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "خواندن پروژه انجام نشد.",
+    });
   }
-
-  res.status(200).json({
-    message: "پروژه پیدا شد.",
-    data: project,
-  });
 });
 
 // ido : its for ///creating a project sing post
@@ -65,58 +83,80 @@ router.post("/", async (req, res) => {
   }
 });
 
-// ido : its for ///edit the project
+router.put("/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
 
-router.put("/:id", (req, res) => {
-  console.log("Incoming request:", req.method, req.path);
+    if (!mongoose.isObjectIdOrHexString(id)) {
+      res.status(400).json({
+        message: "شناسه پروژه نامعتبر است.",
+      });
+      return;
+    }
 
-  const result = validateProject(req.body);
-  const id = req.params.id;
-  const project = projects.find((item) => item.id === id);
+    const result = validateProject(req.body);
 
-  if (project === undefined) {
-    res.status(404).json({
-      message: "پروژه پیدا نشد.",
+    if (result.success === false) {
+      res.status(400).json({
+        message: result.error,
+      });
+      return;
+    }
+
+    const project = await ProjectModel.findById(id);
+
+    if (project === null) {
+      res.status(404).json({
+        message: "پروژه پیدا نشد.",
+      });
+      return;
+    }
+
+    project.name = result.data.name;
+    project.description = result.data.description;
+    await project.save();
+
+    res.status(200).json({
+      message: "پروژه ویرایش شد.",
+      data: project,
     });
-    return;
-  }
-
-  if (result.success === false) {
-    res.status(400).json({
-      message: result.error,
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "ویرایش پروژه انجام نشد.",
     });
-    return;
   }
-
-  project.name = result.data.name;
-  project.description = result.data.description;
-
-  res.status(200).json({
-    message: "پروژه ادیت شد.",
-    data: project,
-  });
 });
 
-// ido : its for ///remove the project
+router.delete("/:id", async (req, res) => {
+  try {
+    const id = req.params.id;
 
-router.delete("/:id", (req, res) => {
-  console.log("Incoming request:", req.method, req.path);
+    if (!mongoose.isObjectIdOrHexString(id)) {
+      res.status(400).json({
+        message: "شناسه پروژه نامعتبر است.",
+      });
+      return;
+    }
 
-  const id = req.params.id;
-  const projectIndex = projects.findIndex((item) => item.id === id);
+    const deletedProject = await ProjectModel.findByIdAndDelete(id);
 
-  if (projectIndex === -1) {
-    res.status(404).json({
-      message: "پروژه پیدا نشد.",
+    if (deletedProject === null) {
+      res.status(404).json({
+        message: "پروژه پیدا نشد.",
+      });
+      return;
+    }
+
+    res.status(200).json({
+      message: "پروژه حذف شد.",
     });
-    return;
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "حذف پروژه انجام نشد.",
+    });
   }
-
-  projects.splice(projectIndex, 1);
-
-  res.status(200).json({
-    message: "پروژه حذف شد.",
-  });
 });
 
 export default router;
