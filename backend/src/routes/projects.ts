@@ -238,4 +238,100 @@ router.get("/:id/tasks", async (req, res) => {
     });
   }
 });
+
+router.put("/:id/tasks/:taskId", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const taskId = req.params.taskId;
+
+    if (!mongoose.isObjectIdOrHexString(id)) {
+      res.status(400).json({
+        message: "شناسه پروژه نامعتبر است.",
+      });
+      return;
+    }
+    if (!mongoose.isObjectIdOrHexString(taskId)) {
+      res.status(400).json({
+        message: "شناسه تسک نامعتبر است.",
+      });
+      return;
+    }
+
+    const result = validateTask(req.body);
+
+    if (result.success === false) {
+      res.status(400).json({
+        message: result.error,
+      });
+      return;
+    }
+
+    const task = await TaskModel.findOne({
+      _id: taskId,
+      project: id,
+    });
+    if (task === null) {
+      res.status(404).json({
+        message: "تسک پیدا نشد.",
+      });
+      return;
+    }
+
+    task.title = result.data.title;
+    task.description = result.data.description;
+    task.status = result.data.status;
+    await task.save();
+
+    res.status(200).json({
+      message: "تسک ویرایش شد.",
+      data: task,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "ویرایش تسک انجام نشد.",
+    });
+  }
+});
+
+router.delete("/:id/tasks/:taskId", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const taskId = req.params.taskId;
+
+    if (!mongoose.isObjectIdOrHexString(id)) {
+      res.status(400).json({
+        message: "شناسه پروژه نامعتبر است.",
+      });
+      return;
+    }
+    if (!mongoose.isObjectIdOrHexString(taskId)) {
+      res.status(400).json({
+        message: "شناسه تسک نامعتبر است.",
+      });
+      return;
+    }
+
+    const deleteTask = await TaskModel.findOneAndDelete({
+      _id: taskId,
+      project: id,
+    });
+
+    if (deleteTask === null) {
+      res.status(404).json({
+        message: "تسک پیدا نشد.",
+      });
+      return;
+    }
+    res.status(200).json({
+      message: "تسک حذف شد.",
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "حذف تسک انجام نشد.",
+    });
+  }
+});
+
 export default router;
