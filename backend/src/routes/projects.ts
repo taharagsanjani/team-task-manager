@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { validateProject } from "../validators/project.js";
+import { validateTask } from "../validators/task.js";
 import { ProjectModel } from "../models/project.model.js";
 import mongoose from "mongoose";
+import { TaskModel } from "../models/task.model.js";
 
 const router = Router();
 
@@ -159,4 +161,81 @@ router.delete("/:id", async (req, res) => {
   }
 });
 
+router.post("/:id/tasks", async (req, res) => {
+  console.log("Incoming request:", req.method, req.path);
+
+  try {
+    const id = req.params.id;
+    if (!mongoose.isObjectIdOrHexString(id)) {
+      res.status(400).json({
+        message: "شناسه پروژه نامعتبر است.",
+      });
+      return;
+    }
+    const result = validateTask(req.body);
+
+    if (result.success === false) {
+      res.status(400).json({
+        message: result.error,
+      });
+      return;
+    }
+
+    const project = await ProjectModel.findById(id);
+
+    if (project === null) {
+      res.status(404).json({
+        message: "تسک پیدا نشد.",
+      });
+      return;
+    }
+
+    const newTask = {
+      title: result.data.title,
+      description: result.data.description,
+      status: result.data.status,
+      project: project._id,
+    };
+
+    const taskNew = await TaskModel.create(newTask);
+    res.status(201).json({
+      message: "تسک ساخته شد.",
+      data: taskNew,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "تسک انجام نشد.",
+    });
+  }
+});
+
+router.get("/:id/tasks", async (req, res) => {
+  try {
+    const id = req.params.id;
+    if (!mongoose.isObjectIdOrHexString(id)) {
+      res.status(400).json({
+        message: "شناسه پروژه نامعتبر است.",
+      });
+      return;
+    }
+    const project = await ProjectModel.findById(id);
+
+    if (project === null) {
+      res.status(404).json({
+        message: "پروزه پیدا نشد.",
+      });
+      return;
+    }
+
+    const tasks = await TaskModel.find({ project: id });
+
+    res.status(200).json({ data: tasks });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "گرفتن تسک انجام نشد.»",
+    });
+  }
+});
 export default router;
