@@ -62,3 +62,27 @@ export function validateTask(input: unknown): ValidationResult {
     data: { title, description, status },
   };
 }
+
+type ValidationTaskResult =
+  | { success: true; data: { status: "todo" | "in_progress" | "done" } }
+  | { success: false; error: string };
+
+export function validateTaskStatus(input: unknown): ValidationTaskResult {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
+    return { success: false, error: "ورودی باید آبجکت باشد." };
+  }
+  if (!("status" in input)) {
+    return { success: false, error: "وضعیت تسک الزامی است." };
+  }
+  if (
+    input.status !== "todo" &&
+    input.status !== "in_progress" &&
+    input.status !== "done"
+  ) {
+    return { success: false, error: "نام وضعیت نامعتبر است." };
+  }
+  return {
+    success: true,
+    data: { status: input.status },
+  };
+}

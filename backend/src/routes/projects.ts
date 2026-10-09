@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { validateProject } from "../validators/project.js";
-import { validateTask } from "../validators/task.js";
+import { validateTask, validateTaskStatus } from "../validators/task.js";
 import { ProjectModel } from "../models/project.model.js";
 import mongoose from "mongoose";
 import { TaskModel } from "../models/task.model.js";
@@ -330,6 +330,59 @@ router.delete("/:id/tasks/:taskId", async (req, res) => {
     console.error(error);
     res.status(500).json({
       message: "حذف تسک انجام نشد.",
+    });
+  }
+});
+
+router.patch("/:id/tasks/:taskId/status", async (req, res) => {
+  try {
+    const id = req.params.id;
+    const taskId = req.params.taskId;
+
+    if (!mongoose.isObjectIdOrHexString(id)) {
+      res.status(400).json({
+        message: "شناسه پروژه نامعتبر است.",
+      });
+      return;
+    }
+    if (!mongoose.isObjectIdOrHexString(taskId)) {
+      res.status(400).json({
+        message: "شناسه تسک نامعتبر است.",
+      });
+      return;
+    }
+
+    const result = validateTaskStatus(req.body);
+
+    if (result.success === false) {
+      res.status(400).json({
+        message: result.error,
+      });
+      return;
+    }
+
+    const task = await TaskModel.findOne({
+      _id: taskId,
+      project: id,
+    });
+    if (task === null) {
+      res.status(404).json({
+        message: "تسک پیدا نشد.",
+      });
+      return;
+    }
+
+    task.status = result.data.status;
+    await task.save();
+
+    res.status(200).json({
+      message: "وضعیت تسک ویرایش شد.",
+      data: task,
+    });
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({
+      message: "ویرایش تسک انجام نشد.",
     });
   }
 });
