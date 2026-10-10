@@ -141,17 +141,25 @@ router.delete("/:id", async (req, res) => {
       return;
     }
 
-    const deletedProject = await ProjectModel.findByIdAndDelete(id);
+    const project = await ProjectModel.findById(id);
 
-    if (deletedProject === null) {
+    if (project === null) {
       res.status(404).json({
         message: "پروژه پیدا نشد.",
       });
       return;
     }
 
+    const removeProjectsTask = await TaskModel.deleteMany({
+      project: id,
+    });
+
+    const taskCounts = removeProjectsTask.deletedCount;
+
+    await ProjectModel.findByIdAndDelete(id);
+
     res.status(200).json({
-      message: "پروژه حذف شد.",
+      message: `" تسک با ان پاک شد${taskCounts} پروژه حذف شد"`,
     });
   } catch (error) {
     console.error(error);
