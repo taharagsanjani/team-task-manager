@@ -159,7 +159,7 @@ router.delete("/:id", async (req, res) => {
     await ProjectModel.findByIdAndDelete(id);
 
     res.status(200).json({
-      message: `" تسک با ان پاک شد${taskCounts} پروژه حذف شد"`,
+      message: `تسک پاک شد ${taskCounts} پاک شد، پروژه حذف شد`,
     });
   } catch (error) {
     console.error(error);
