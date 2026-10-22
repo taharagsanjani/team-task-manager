@@ -1,11 +1,14 @@
 import express from "express";
 import projectsRouter from "./routes/projects.js";
+import authRouter from "./routes/auth.js";
 
 const app = express();
 
 app.use(express.json());
 
 app.use("/api/projects", projectsRouter);
+
+app.use("/api/auth", authRouter);
 
 app.get("/api/health", (req, res) => {
   console.log("Incoming request:", req.method, req.path);
@@ -24,6 +27,5 @@ app.get("/api/info", (req, res) => {
     version: "0.1.0",
   });
 });
-
 
 export default app;
