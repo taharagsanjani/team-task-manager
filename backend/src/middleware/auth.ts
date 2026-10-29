@@ -30,7 +30,6 @@ export const authenticateToken = (
       res.status(401).json({ message: "توکن معتبر نیست." });
       return;
     }
-    console.log(payload.id);
     req.userId = payload.id;
     next();
   } catch (error) {

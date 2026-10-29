@@ -87,7 +87,7 @@ router.post("/login", async (req, res) => {
       throw Error("secret is missing");
     }
     const jwToken = jwt.sign({ id: userData.id }, jwtSecret, {
-      expiresIn: "12h",
+      expiresIn: "1h",
     });
     res.status(200).json({
       data: {
