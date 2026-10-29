@@ -1,12 +1,13 @@
 import express from "express";
 import projectsRouter from "./routes/projects.js";
 import authRouter from "./routes/auth.js";
+import { authenticateToken } from "./middleware/auth.js";
 
 const app = express();
 
 app.use(express.json());
 
-app.use("/api/projects", projectsRouter);
+app.use("/api/projects", authenticateToken, projectsRouter);
 
 app.use("/api/auth", authRouter);
 

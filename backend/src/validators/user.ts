@@ -71,3 +71,60 @@ export function validateUser(input: unknown): ValidationResult {
     data: { username, email, password },
   };
 }
+type loginInput = {
+  email: string;
+  password: string;
+};
+
+type ValidationLogin =
+  | { success: true; data: loginInput }
+  | { success: false; error: string };
+
+export function validateLogin(input: unknown): ValidationLogin {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
+    return {
+      success: false,
+      error: "اطلاعات یوزر باید یک آبجکت باشد.",
+    };
+  }
+  let email = "";
+
+  if ("email" in input) {
+    if (typeof input.email !== "string") {
+      return {
+        success: false,
+        error: "ایمیل باید متن باشد.",
+      };
+    }
+    email = input.email.trim();
+  }
+  if (email.length === 0) {
+    return {
+      success: false,
+      error: "ایمیل الزامی است.",
+    };
+  }
+
+  let password = "";
+
+  if ("password" in input) {
+    if (typeof input.password !== "string") {
+      return {
+        success: false,
+        error: "رمز باید متن باشد.",
+      };
+    }
+    password = input.password;
+  }
+  if (password.length === 0) {
+    return {
+      success: false,
+      error: "رمز الزامی است.",
+    };
+  }
+
+  return {
+    success: true,
+    data: { email, password },
+  };
+}
