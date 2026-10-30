@@ -25,7 +25,6 @@ export const authenticateToken = (
   }
   try {
     const payload = jwt.verify(splitedToken, jwtSecret);
-    console.log(payload);
     if (typeof payload === "string") {
       res.status(401).json({ message: "توکن معتبر نیست." });
       return;
